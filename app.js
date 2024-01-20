@@ -41,21 +41,29 @@ if (app.get("env") === "production") {
   sessionParms.cookie.secure = true; // serve secure cookies
 }
 
-
+app.use(express.urlencoded({ extended: true }));
 app.use(session(sessionParms));
+
+const passport = require("passport");
+const passportInit = require("./passport/passportInit");
+
+passportInit();
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 app.use(require("connect-flash")());
 app.use(require("./middleware/storeLocals"));
-
-
-app.set("view engine", "ejs");
-app.use(express.urlencoded({ extended: true }));
-
 app.get("/", (req, res) => {
   res.render("index");
 });
 app.use("/sessions", require("./routes/sessionRoutes"));
+
+
+app.set("view engine", "ejs");
+
+
+
 
 //app.use(require("body-parser").urlencoded({ extended: true }));
 
