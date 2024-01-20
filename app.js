@@ -2,11 +2,12 @@ const express = require("express");
 require("express-async-errors");
 require("dotenv").config();
 const connectDB = require("./db/connect");
-
 const app = express();
 const session = require("express-session");
 const secretWordRouter = require("./routes/secretWord");
 const auth = require("./middleware/auth");
+const cookieParser = require("cookie-parser");
+const csrf = require("host-csrf");
 
 
 //REPLACE:
@@ -44,7 +45,23 @@ if (app.get("env") === "production") {
 }
 
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser(process.env.SESSION_SECRET));
 app.use(session(sessionParms));
+
+let csrf_development_mode = true;
+if (app.get("env") === "production") {
+  csrf_development_mode = false;
+  app.set("trust proxy", 1);
+}
+
+const csrf_options = {
+  protected_operations: ["POST", "PATCH", "PUT"], 
+  protected_content_types: ["application/x-www-form-urlencoded", "application/json"], 
+  development_mode: csrf_development_mode,
+  header_name: "csrf-token", 
+};
+
+app.use(csrf(csrf_options));
 
 const passport = require("passport");
 const passportInit = require("./passport/passportInit");
