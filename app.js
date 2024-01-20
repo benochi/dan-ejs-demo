@@ -5,6 +5,7 @@ const connectDB = require("./db/connect");
 
 const app = express();
 const session = require("express-session");
+const secretWordRouter = require("./routes/secretWord");
 
 
 //REPLACE:
@@ -58,7 +59,7 @@ app.get("/", (req, res) => {
   res.render("index");
 });
 app.use("/sessions", require("./routes/sessionRoutes"));
-
+app.use("/secretWord", secretWordRouter);
 
 app.set("view engine", "ejs");
 
@@ -69,27 +70,27 @@ app.set("view engine", "ejs");
 
 // secret word handling
 //let secretWord = "syzygy";
-app.get("/secretWord", (req, res) => {
-  if (!req.session.secretWord) {
-    req.session.secretWord = "syzygy";
-  }
+// app.get("/secretWord", (req, res) => {
+//   if (!req.session.secretWord) {
+//     req.session.secretWord = "syzygy";
+//   }
   
-  res.locals.info = req.flash("info");
-  res.locals.errors = req.flash("error");
-  res.render("secretWord", { secretWord: req.session.secretWord });
-});
+//   res.locals.info = req.flash("info");
+//   res.locals.errors = req.flash("error");
+//   res.render("secretWord", { secretWord: req.session.secretWord });
+// });
 
 //ADD connect-flash
-app.post("/secretWord", (req, res) => {
-  if (req.body.secretWord.toUpperCase()[0] == "P") {
-    req.flash("error", "That word won't work!");
-    req.flash("error", "You can't use words that start with p.");
-  } else {
-    req.session.secretWord = req.body.secretWord;
-    req.flash("info", "The secret word was changed.");
-  }
-  res.redirect("/secretWord");
-});
+// app.post("/secretWord", (req, res) => {
+//   if (req.body.secretWord.toUpperCase()[0] == "P") {
+//     req.flash("error", "That word won't work!");
+//     req.flash("error", "You can't use words that start with p.");
+//   } else {
+//     req.session.secretWord = req.body.secretWord;
+//     req.flash("info", "The secret word was changed.");
+//   }
+//   res.redirect("/secretWord");
+// });
 
 app.use((req, res) => {
   res.status(404).send(`That page (${req.url}) was not found.`);
