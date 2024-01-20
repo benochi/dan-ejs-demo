@@ -1,20 +1,21 @@
 const express = require("express");
 require("express-async-errors");
 require("dotenv").config();
+const connectDB = require("./db/connect");
 
 const app = express();
 const session = require("express-session");
 
 
 //REPLACE:
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-/*WITH: 
+// app.use(
+//   session({
+//     secret: process.env.SESSION_SECRET,
+//     resave: false,
+//     saveUninitialized: true,
+//   })
+// );
+//WITH: 
 const MongoDBStore = require("connect-mongodb-session")(session);
 const url = process.env.MONGO_URI;
 
@@ -42,11 +43,21 @@ if (app.get("env") === "production") {
 
 
 app.use(session(sessionParms));
-*/
+
 
 app.use(require("connect-flash")());
+app.use(require("./middleware/storeLocals"));
+
+
 app.set("view engine", "ejs");
-app.use(require("body-parser").urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => {
+  res.render("index");
+});
+app.use("/sessions", require("./routes/sessionRoutes"));
+
+//app.use(require("body-parser").urlencoded({ extended: true }));
 
 // secret word handling
 //let secretWord = "syzygy";
@@ -54,6 +65,7 @@ app.get("/secretWord", (req, res) => {
   if (!req.session.secretWord) {
     req.session.secretWord = "syzygy";
   }
+  
   res.locals.info = req.flash("info");
   res.locals.errors = req.flash("error");
   res.render("secretWord", { secretWord: req.session.secretWord });
@@ -84,6 +96,7 @@ const port = process.env.PORT || 3000;
 
 const start = async () => {
   try {
+    await connectDB(process.env.MONGO_URI);
     app.listen(port, () =>
       console.log(`Server is listening on port ${port}...`)
     );
