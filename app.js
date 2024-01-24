@@ -5,10 +5,10 @@ const connectDB = require("./db/connect");
 const app = express();
 const session = require("express-session");
 const secretWordRouter = require("./routes/secretWord");
+const jobsRouter = require("./routes/jobs");
 const auth = require("./middleware/auth");
 const cookieParser = require("cookie-parser");
 const csrf = require("host-csrf");
-
 
 //REPLACE:
 // app.use(
@@ -78,6 +78,7 @@ app.get("/", (req, res) => {
 });
 app.use("/sessions", require("./routes/sessionRoutes"));
 app.use("/secretWord", auth, secretWordRouter);
+app.use("/jobs", auth, jobsRouter);
 
 app.set("view engine", "ejs");
 
@@ -119,7 +120,7 @@ app.use((err, req, res, next) => {
   console.log(err);
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3005;
 
 const start = async () => {
   try {
