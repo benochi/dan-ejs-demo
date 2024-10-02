@@ -20,11 +20,13 @@ const csrf = require("host-csrf");
 // );
 //WITH: 
 const MongoDBStore = require("connect-mongodb-session")(session);
-const url = process.env.MONGO_URI;
+let mongoURL = process.env.MONGO_URI;
+if (process.env.NODE_ENV !== 'production') {
+  process.env.NODE_ENV = 'test'; 
+}
 
 const store = new MongoDBStore({
-  // may throw an error, which won't be caught
-  uri: url,
+  uri: mongoURL,
   collection: "mySessions",
 });
 store.on("error", function (error) {
@@ -70,11 +72,27 @@ passportInit();
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 app.use(require("connect-flash")());
 app.use(require("./middleware/storeLocals"));
 app.get("/", (req, res) => {
   res.render("index");
+});
+app.get("/multiply", (req, res) => {
+  const result = req.query.first * req.query.second;
+  if (result.isNaN) {
+    result = "NaN";
+  } else if (result == null) {
+    result = "null";
+  }
+  res.json({ result: result });
+});
+app.use((req, res, next) => {
+  if (req.path == "/multiply") {
+    res.set("Content-Type", "application/json");
+  } else {
+    res.set("Content-Type", "text/html");
+  }
+  next();
 });
 app.use("/sessions", require("./routes/sessionRoutes"));
 app.use("/secretWord", auth, secretWordRouter);
@@ -82,13 +100,7 @@ app.use("/jobs", auth, jobsRouter);
 
 app.set("view engine", "ejs");
 
-
-
-
-//app.use(require("body-parser").urlencoded({ extended: true }));
-
-// secret word handling
-//let secretWord = "syzygy";
+// Uncommented code for secretWord handling
 // app.get("/secretWord", (req, res) => {
 //   if (!req.session.secretWord) {
 //     req.session.secretWord = "syzygy";
@@ -122,11 +134,11 @@ app.use((err, req, res, next) => {
 
 const port = process.env.PORT || 3005;
 
-const start = async () => {
+const start = () => {
   try {
-    await connectDB(process.env.MONGO_URI);
-    app.listen(port, () =>
-      console.log(`Server is listening on port ${port}...`)
+    require("./db/connect")(mongoURL);
+    return app.listen(port, () =>
+      console.log(`Server is listening on port ${port}...`),
     );
   } catch (error) {
     console.log(error);
@@ -134,3 +146,5 @@ const start = async () => {
 };
 
 start();
+
+module.exports = { app };

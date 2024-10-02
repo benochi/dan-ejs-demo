@@ -11,6 +11,7 @@ const passportInit = () => {
         try {
           const user = await User.findOne({ email: email });
           if (!user) {
+            //done args = an error/null, user object/false, object with message and type
             return done(null, false, { message: "Incorrect credentials." });
           }
 
